@@ -1,13 +1,14 @@
 terraform {
   # Assumes s3 bucket and dynamo DB table already set up
   # See /code/03-basics/aws-backend
-  backend "s3" {
-    bucket         = "devops-directive-tf-state"
-    key            = "03-basics/web-app/terraform.tfstate"
-    region         = "us-east-1"
-    dynamodb_table = "terraform-state-locking"
-    encrypt        = true
-  }
+  # backend "s3" {
+  #   bucket         = "terraform-state-ihtemad"
+  #   key            = "state_utils/terraform.tfstate"
+  #   region         = "us-east-1"
+  #   # dynamodb_table = "terraform-state-locking"
+  #   encrypt        = true
+  #   use_lockfile   = true
+  # }
 
   required_providers {
     aws = {
@@ -44,7 +45,7 @@ resource "aws_instance" "instance_2" {
 }
 
 resource "aws_s3_bucket" "bucket" {
-  bucket_prefix = "devops-directive-web-app-data"
+  bucket_prefix = "terraform-tutorial-web-app"
   force_destroy = true
 }
 
@@ -73,7 +74,7 @@ data "aws_subnet_ids" "default_subnet" {
 }
 
 resource "aws_security_group" "instances" {
-  name = "instance-security-group"
+  name = "tarraform-tutorial-instance-security-group"
 }
 
 resource "aws_security_group_rule" "allow_http_inbound" {
@@ -106,7 +107,7 @@ resource "aws_lb_listener" "http" {
 }
 
 resource "aws_lb_target_group" "instances" {
-  name     = "example-target-group"
+  name     = "terraform-tutorial-target-group"
   port     = 8080
   protocol = "HTTP"
   vpc_id   = data.aws_vpc.default_vpc.id
@@ -179,7 +180,7 @@ resource "aws_security_group_rule" "allow_alb_all_outbound" {
 
 
 resource "aws_lb" "load_balancer" {
-  name               = "web-app-lb"
+  name               = "terraform-tutorial-web-app-lb"
   load_balancer_type = "application"
   subnets            = data.aws_subnet_ids.default_subnet.ids
   security_groups    = [aws_security_group.alb.id]
@@ -202,19 +203,26 @@ resource "aws_route53_record" "root" {
   }
 }
 
-resource "aws_db_instance" "db_instance" {
-  allocated_storage = 20
-  # This allows any minor version within the major engine_version
-  # defined below, but will also result in allowing AWS to auto
-  # upgrade the minor version of your DB. This may be too risky
-  # in a real production environment.
-  auto_minor_version_upgrade = true
-  storage_type               = "standard"
-  engine                     = "postgres"
-  engine_version             = "12"
-  instance_class             = "db.t2.micro"
-  name                       = "mydb"
-  username                   = "foo"
-  password                   = "foobarbaz"
-  skip_final_snapshot        = true
+# resource "aws_db_instance" "db_instance" {
+#   allocated_storage = 20
+#   # This allows any minor version within the major engine_version
+#   # defined below, but will also result in allowing AWS to auto
+#   # upgrade the minor version of your DB. This may be too risky
+#   # in a real production environment.
+#   auto_minor_version_upgterrade = true
+#   storage_type               = "standard"
+#   engine                     = "postgres"
+#   engine_version             = "12"
+#   instance_class             = "db.t2.micro"
+#   name                       = "mydb"
+#   username                   = "foo"
+#   password                   = "foobarbaz"
+#   skip_final_snapshot        = true
+# }
+
+output "instance_1_public_ip" {
+  value = aws_instance.instance_1.public_ip
+}
+output "instance_2_public_ip" {
+  value = aws_instance.instance_2.public_ip
 }
